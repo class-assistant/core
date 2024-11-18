@@ -1,11 +1,13 @@
+from langchain_core.messages import SystemMessage, BaseMessage
 from langchain_openai import ChatOpenAI
 
 
 class ChatBot:
 
-    def __init__(self):
-        self.history = []
+    def __init__(self, system_prompt):
         self.model = ChatOpenAI(model="gpt-4o")
+        self.systemPrompt = system_prompt
+        self.history = [SystemMessage(system_prompt)]
 
     def chat(self, message):
         self.history.append(message)
