@@ -1,0 +1,6 @@
+1. Cargar csv
+2. Por cada video del csv:
+    1. Transcribirlo.
+    2. Pegarle a carlitos y que nos devuelva un csv de cada header(a definir).
+    3. Agregar los nuevos campitos a la fila correspondiente en el csv.
+3. Agregas csv a una prompt y jugar.
