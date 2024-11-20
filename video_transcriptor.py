@@ -1,13 +1,17 @@
-from deepgram import DeepgramClient, PrerecordedOptions
+from openai import OpenAI
 
 
 class VideoTranscriptor:
     def __init__(self):
-        self.client = DeepgramClient()
-        self.options = PrerecordedOptions(
-            punctuate=True, model="nova-2", language="es-419"
-        )
+        self.client = OpenAI()
+
 
     def transcribe(self, video_url):
-        response = self.client.listen.prerecorded.v('1').transcribe_url(video_url, self.options)
-        return response['results']['channels'][0]['alternatives'][0]['transcript']
+        audio_file = open(video_url, 'rb')
+        transcription = self.client.audio.transcriptions.create(
+            model="whisper-1",
+            file=audio_file,
+            response_format="text"
+        )
+        return transcription
+
