@@ -1,7 +1,7 @@
 import csv
+from parser import TranscriptionParser
 
 from chat import ChatBot
-from parser import TranscriptionParser
 from prompt import class_assistant_prompt
 from video_transcriptor import VideoTranscriptor
 
@@ -11,19 +11,30 @@ def get_class_assistant_with_prompt_and_csv(csv_path):
     transcription_parser = TranscriptionParser()
     all_rows = []  # Lista para almacenar las filas del CSV como texto
 
-    with open(csv_path, "r") as file, open("data/output_file.csv", "w", newline="") as output_file:
+    with open(csv_path, "r") as file, open(
+        "data/output_file.csv", "w", newline=""
+    ) as output_file:
         reader = csv.reader(file, delimiter=";")
         writer = csv.writer(output_file, delimiter=";")
 
         headers = next(reader)
-        headers.append("Objetivos")
+        new_headers = [
+            "Expectativas del curso",
+            "Qué se quiere llevar de conocimiento de sus compañeros?",
+            "Que le va a aportar al grupo?",
+            "Cómo le gustaría que esta experiencia lo ayude a crecer?",
+        ]
+
+        headers.extend(new_headers)
         writer.writerow(headers)
         all_rows.append(";".join(headers))  # Agregar encabezados a la lista
 
         for row in reader:
             video = row[-1]  # Asumiendo que la última columna es el video
             video_transcription = transcriptor.transcribe(video)
-            transcription_summary = get_summary_from_transcription(video_transcription, transcription_parser)
+            transcription_summary = get_summary_from_transcription(
+                video_transcription, transcription_parser
+            )
             row.append(transcription_summary)
             writer.writerow(row)
             all_rows.append(";".join(row))  # Agregar cada fila al CSV acumulado
@@ -39,13 +50,32 @@ def get_class_assistant_with_prompt_and_csv(csv_path):
     final_prompt = class_assistant_prompt.replace("<<>>", csv_content)
     return ChatBot(final_prompt)
 
-def get_summary_from_transcription(video_transcription, transcription_parser):
-    parsed_transcription = transcription_parser.parse_to_csv(
-        [
-            {
-                "name": "Objetivos",
-                "description": "Objetivos del alumno en el curso"
-            }
-        ], video_transcription)
 
-    return parsed_transcription['Objetivos']
+def get_summary_from_transcription(video_transcription, transcription_parser):
+
+    questions = [
+        {
+            "name": "Expectativas del curso",
+            "description": "Expectativas del alumno en el curso",
+        },
+        {
+            "name": "Qué se quiere llevar de conocimiento de sus compañeros?",
+            "description": "Conocimiento que el alumno quiere obtener de sus compañeros",
+        },
+        {
+            "name": "Que le va a aportar al grupo?",
+            "description": "Las capacidades, fortalezas y conocimientos que el alumno le va a aportar a sus compañeros",
+        },
+        {
+            "name": "Cómo le gustaría que esta experiencia lo ayude a crecer?",
+            "description": "De que manera le gustaria al alumno que el curso lo ayude a crecer de manera personal y profesional",
+        },
+    ]
+
+    parsed_transcription = transcription_parser.parse_to_csv(
+        questions, video_transcription
+    )
+
+    attributes = [parsed_transcription[question["name"]] for question in questions]
+
+    return ";".join(attributes)
